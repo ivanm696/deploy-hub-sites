@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deploy Hub — отправь свой сайт в путь</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --kraft:      #cbb692;
+    --kraft-dark: #a68f66;
+    --paper:      #f4ecd8;
+    --ink:        #211c14;
+    --ink-soft:   #4a4030;
+    --stamp:      #b8392c;
+    --stamp-dark: #8c2b21;
+    --airmail:    #2e4d5e;
+    --line:       #93815c;
+    --ok:         #3d6b3f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--kraft);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(0,0,0,.015) 0 2px, transparent 2px 6px);
+    color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;
+    min-height:100vh;
+    padding:5vh 5vw;
+  }
+  h1,h2,.stamp-font{font-family:'Special Elite',cursive}
+
+  .wrap{max-width:880px;margin:0 auto}
+
+  /* ── HEADER ─────────────────────────────────── */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:36px;
+    border-bottom:3px double var(--ink);
+    padding-bottom:20px;
+  }
+  .logo{display:flex;align-items:center;gap:14px}
+  .logo-mark{
+    width:44px;height:44px;border:2px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Special Elite',cursive;font-size:1.3rem;
+    transform:rotate(-8deg);
+  }
+  .logo h1{font-size:1.5rem;letter-spacing:.02em}
+  .logo p{font-size:.78rem;color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+  .office-stamp{
+    font-family:'Special Elite',cursive;
+    font-size:.72rem;
+    color:var(--airmail);
+    border:1.5px solid var(--airmail);
+    padding:6px 12px;
+    transform:rotate(3deg);
+    letter-spacing:.05em;
+  }
+
+  /* ── INTRO ──────────────────────────────────── */
+  .intro{margin-bottom:40px;max-width:60ch}
+  .intro p{color:var(--ink-soft);font-size:.95rem;line-height:1.7}
+  .intro strong{color:var(--ink)}
+
+  /* ── SETUP CARD ─────────────────────────────── */
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    box-shadow:4px 4px 0 rgba(33,28,20,.12);
+    padding:28px 30px;
+    margin-bottom:28px;
+    position:relative;
+  }
+  .card::before{
+    content:attr(data-label);
+    position:absolute;top:-11px;left:24px;
+    background:var(--kraft);
+    padding:0 10px;
+    font-family:'Special Elite',cursive;
+    font-size:.8rem;
+    color:var(--ink-soft);
+  }
+  .field{margin-bottom:18px}
+  .field label{
+    display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:7px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    background:#fff;
+    border:1px solid var(--line);
+    padding:10px 12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.9rem;
+    color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus{outline:2px solid var(--airmail);outline-offset:1px}
+  .hint{font-size:.76rem;color:#7a6d50;margin-top:5px;line-height:1.5}
+  .hint a{color:var(--airmail)}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  /* ── DROPZONE ───────────────────────────────── */
+  .dropzone{
+    border:2px dashed var(--line);
+    padding:30px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    background:#fffcf4;
+  }
+  .dropzone.drag{border-color:var(--stamp);background:#fff5ee}
+  .dropzone .dz-icon{font-size:1.8rem;margin-bottom:8px}
+  .dropzone .dz-text{font-size:.88rem;color:var(--ink-soft)}
+  .dropzone .dz-text b{color:var(--airmail)}
+  #fileInput{display:none}
+
+  textarea#htmlCode{min-height:140px;font-size:.82rem;resize:vertical;display:none}
+  .toggle-paste{
+    font-size:.78rem;color:var(--airmail);cursor:pointer;
+    text-decoration:underline;margin-top:10px;display:inline-block;
+  }
+
+  .filename-preview{
+    margin-top:12px;font-size:.84rem;
+    background:#fff;border:1px solid var(--line);padding:8px 12px;
+    display:none;justify-content:space-between;align-items:center;
+  }
+  .filename-preview.show{display:flex}
+  .filename-preview button{
+    background:none;border:none;color:var(--stamp);cursor:pointer;font-size:.8rem;
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* ── DEPLOY BUTTON ──────────────────────────── */
+  .deploy-btn{
+    width:100%;
+    background:var(--stamp);
+    color:var(--paper);
+    border:none;
+    padding:16px;
+    font-family:'Special Elite',cursive;
+    font-size:1.05rem;
+    letter-spacing:.04em;
+    cursor:pointer;
+    margin-top:8px;
+    transition:background .15s, transform .1s;
+    position:relative;
+    overflow:hidden;
+  }
+  .deploy-btn:hover:not(:disabled){background:var(--stamp-dark)}
+  .deploy-btn:active:not(:disabled){transform:scale(.99)}
+  .deploy-btn:disabled{background:#b8ac8f;cursor:not-allowed}
+
+  .status-line{
+    font-size:.8rem;color:var(--ink-soft);
+    margin-top:12px;min-height:20px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .status-line.err{color:var(--stamp-dark)}
+  .status-line.ok{color:var(--ok)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor;
+    animation:pulse 1s infinite ease-in-out}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ── RESULT: SHIPPING LABEL ─────────────────── */
+  .label-result{
+    display:none;
+    background:var(--paper);
+    border:1px solid var(--ink);
+    padding:0;
+    margin-top:8px;
+    position:relative;
+    animation:stampIn .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .label-result.show{display:block}
+  @keyframes stampIn{
+    0%{opacity:0;transform:scale(1.15) rotate(-3deg)}
+    60%{opacity:1;transform:scale(.97) rotate(1deg)}
+    100%{opacity:1;transform:scale(1) rotate(0)}
+  }
+  .label-top{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 22px;border-bottom:1.5px dashed var(--line);
+  }
+  .label-top .tag{font-family:'Special Elite',cursive;font-size:.85rem}
+  .stamp-mark{
+    font-family:'Special Elite',cursive;
+    color:var(--ok);
+    border:2px solid var(--ok);
+    border-radius:50%;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.62rem;text-align:center;line-height:1.15;
+    transform:rotate(-12deg);
+    text-transform:uppercase;
+  }
+  .label-body{padding:20px 22px}
+  .label-body .site-title{font-family:'Special Elite',cursive;font-size:1.1rem;margin-bottom:4px}
+  .url-row{
+    display:flex;gap:10px;align-items:center;
+    background:#fff;border:1px solid var(--line);
+    padding:10px 14px;margin-top:12px;
+  }
+  .url-row input{
+    flex:1;border:none;background:none;font-family:'IBM Plex Mono',monospace;
+    font-size:.85rem;color:var(--airmail);
+  }
+  .url-row input:focus{outline:none}
+  .url-row button{
+    background:var(--airmail);color:#fff;border:none;
+    padding:7px 14px;font-size:.76rem;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;
+  }
+  .url-row button:hover{background:#243d4a}
+  .label-actions{display:flex;gap:10px;margin-top:14px}
+  .label-actions a{
+    font-size:.8rem;color:var(--ink-soft);text-decoration:none;
+    border-bottom:1px solid var(--line);
+  }
+  .barcode{
+    height:34px;margin-top:16px;
+    background:repeating-linear-gradient(90deg,
+      var(--ink) 0 2px, transparent 2px 4px,
+      var(--ink) 4px 7px, transparent 7px 9px,
+      var(--ink) 9px 10px, transparent 10px 14px);
+    opacity:.75;
+  }
+
+  /* ── PACKAGES LIST ──────────────────────────── */
+  .manifest{margin-top:40px}
+  .manifest h2{font-size:1rem;margin-bottom:4px}
+  .manifest .sub{font-size:.8rem;color:var(--ink-soft);margin-bottom:18px}
+  .parcel{
+    background:var(--paper);border:1px solid var(--line);
+    padding:14px 18px;margin-bottom:10px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .parcel .p-name{font-size:.88rem;font-weight:600}
+  .parcel .p-time{font-size:.72rem;color:#8a7c5c}
+  .parcel a{
+    font-size:.78rem;color:var(--airmail);text-decoration:none;
+    border-bottom:1px solid var(--airmail);white-space:nowrap;
+  }
+  .empty-manifest{
+    font-size:.85rem;color:#8a7c5c;font-style:italic;padding:16px 0;
+  }
+
+  footer{
+    margin-top:60px;padding-top:20px;border-top:1px solid var(--line);
+    font-size:.76rem;color:#7a6d50;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+
+  @media(max-width:640px){
+    .field-row{grid-template-columns:1fr}
+    header{flex-direction:column;align-items:flex-start;gap:14px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">✉</div>
+      <div>
+        <h1>Deploy Hub</h1>
+        <p>Почта для статичных сайтов</p>
+      </div>
+    </div>
+    <div class="office-stamp">GITHUB PAGES · FREE</div>
+  </header>
+
+  <div class="intro">
+    <p>
+      Загрузи HTML-файл (или вставь код) — сайт «упакует» его и отправит на
+      <strong>GitHub Pages</strong>. В ответ получишь ссылку, по которой
+      страница будет открываться из любого браузера.
+    </p>
+  </div>
+
+  <!-- SETUP -->
+  <div class="card" data-label="01 · Отправитель">
+    <div class="field-row">
+      <div class="field">
+        <label for="ghUser">GitHub логин</label>
+        <input id="ghUser" type="text" placeholder="ivanm696" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="ghRepo">Название репозитория</label>
+        <input id="ghRepo" type="text" placeholder="my-deployed-sites" value="deploy-hub-sites" autocomplete="off">
+      </div>
+    </div>
+    <div class="field">
+      <label for="ghToken">Personal Access Token</label>
+      <input id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <p class="hint">
+        Нужны права <code>repo</code>. Токен хранится только в этом браузере
+        (localStorage) и уходит напрямую в api.github.com — никуда больше.
+        Создать: <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">github.com/settings/tokens/new</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- PACKAGE -->
+  <div class="card" data-label="02 · Посылка">
+    <div class="field">
+      <label>Имя файла (латиницей, без пробелов)</label>
+      <input id="siteName" type="text" placeholder="my-landing-page" autocomplete="off">
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">📦</div>
+      <div class="dz-text">Перетащи <b>.html</b> файл сюда или нажми, чтобы выбрать</div>
+      <input type="file" id="fileInput" accept=".html,.htm">
+    </div>
+    <div class="filename-preview" id="filePreview">
+      <span id="fileNameText"></span>
+      <button id="fileClear">убрать</button>
+    </div>
+
+    <span class="toggle-paste" id="togglePaste">…или вставить HTML-код текстом</span>
+    <textarea id="htmlCode" placeholder="<!DOCTYPE html>&#10;<html>...</html>"></textarea>
+  </div>
+
+  <button class="deploy-btn" id="deployBtn">ОТПРАВИТЬ В ПУТЬ</button>
+  <div class="status-line" id="statusLine"></div>
+
+  <!-- RESULT -->
+  <div class="label-result" id="labelResult">
+    <div class="label-top">
+      <span class="tag">Квитанция об отправке</span>
+      <div class="stamp-mark">DELIVERED<br>ON&nbsp;WEB</div>
+    </div>
+    <div class="label-body">
+      <div class="site-title" id="resultTitle">—</div>
+      <div class="url-row">
+        <input id="resultUrl" type="text" readonly>
+        <button id="copyBtn">Копировать</button>
+      </div>
+      <div class="label-actions">
+        <a id="openLink" href="#" target="_blank" rel="noopener">Открыть сайт →</a>
+        <a id="repoLink" href="#" target="_blank" rel="noopener">Репозиторий на GitHub →</a>
+      </div>
+      <div class="barcode"></div>
+    </div>
+  </div>
+
+  <!-- MANIFEST / HISTORY -->
+  <div class="manifest">
+    <h2>Журнал отправлений</h2>
+    <p class="sub">Всё, что было задеплоено с этого браузера</p>
+    <div id="manifestList"></div>
+  </div>
+
+  <footer>
+    <span>Deploy Hub — работает через GitHub Contents API + GitHub Pages</span>
+    <span>Без своего сервера · без базы данных</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const ghUser  = $('ghUser'), ghRepo = $('ghRepo'), ghToken = $('ghToken');
+  const siteName = $('siteName');
+  const dropzone = $('dropzone'), fileInput = $('fileInput');
+  const filePreview = $('filePreview'), fileNameText = $('fileNameText'), fileClear = $('fileClear');
+  const togglePaste = $('togglePaste'), htmlCode = $('htmlCode');
+  const deployBtn = $('deployBtn'), statusLine = $('statusLine');
+  const labelResult = $('labelResult'), resultTitle = $('resultTitle'), resultUrl = $('resultUrl');
+  const openLink = $('openLink'), repoLink = $('repoLink'), copyBtn = $('copyBtn');
+  const manifestList = $('manifestList');
+
+  let fileContent = null;
+  let fileNameFromUpload = null;
+
+  // ── Restore saved settings ─────────────────────────────
+  ghUser.value  = localStorage.getItem('dh_user')  || '';
+  ghRepo.value  = localStorage.getItem('dh_repo')  || 'deploy-hub-sites';
+  ghToken.value = localStorage.getItem('dh_token') || '';
+
+  [ghUser, ghRepo, ghToken].forEach(el => {
+    el.addEventListener('change', () => {
+      localStorage.setItem('dh_user',  ghUser.value.trim());
+      localStorage.setItem('dh_repo',  ghRepo.value.trim());
+      localStorage.setItem('dh_token', ghToken.value.trim());
+    });
+  });
+
+  // ── Dropzone ─────────────────────────────────────────
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.name.match(/\.html?$/i)) {
+      setStatus('Нужен файл .html', true);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      fileContent = e.target.result;
+      fileNameFromUpload = file.name;
+      fileNameText.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} КБ)`;
+      filePreview.classList.add('show');
+      if (!siteName.value) {
+        siteName.value = file.name.replace(/\.html?$/i, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+      }
+      htmlCode.value = '';
+      htmlCode.style.display = 'none';
+      setStatus('');
+    };
+    reader.readAsText(file);
+  }
+
+  fileClear.addEventListener('click', () => {
+    fileContent = null; fileNameFromUpload = null;
+    filePreview.classList.remove('show');
+    fileInput.value = '';
+  });
+
+  togglePaste.addEventListener('click', () => {
+    const showing = htmlCode.style.display === 'block';
+    htmlCode.style.display = showing ? 'none' : 'block';
+    togglePaste.textContent = showing
+      ? '…или вставить HTML-код текстом'
+      : '…или загрузить файл выше';
+    if (!showing) { fileContent = null; filePreview.classList.remove('show'); fileInput.value=''; }
+  });
+
+  // ── Status helper ───────────────────────────────────
+  function setStatus(text, isErr, isOk) {
+    statusLine.className = 'status-line' + (isErr ? ' err' : isOk ? ' ok' : '');
+    statusLine.innerHTML = text ? (isErr || isOk ? '' : '<span class="dot"></span>') + text : '';
+  }
+
+  // ── GitHub API helpers ───────────────────────────────
+  async function gh(path, opts = {}) {
+    const token = ghToken.value.trim();
+    const res = await fetch(`https://api.github.com${path}`, {
+      ...opts,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        ...(opts.headers || {})
+      }
+    });
+    return res;
+  }
+
+  function b64EncodeUnicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  async function ensureRepoAndPages(user, repo) {
+    let res = await gh(`/repos/${user}/${repo}`);
+    if (res.status === 404) {
+      setStatus('Создаю репозиторий…');
+      const createRes = await gh('/user/repos', {
+        method: 'POST',
+        body: JSON.stringify({ name: repo, description: 'Sites deployed via Deploy Hub', auto_init: true })
+      });
+      if (!createRes.ok) throw new Error('Не удалось создать репозиторий: ' + (await createRes.text()));
+      await new Promise(r => setTimeout(r, 1500));
+    } else if (!res.ok) {
+      throw new Error('Ошибка доступа к репозиторию. Проверь логин и токен.');
+    }
+
+    // Enable Pages (ignore if already enabled)
+    const pagesRes = await gh(`/repos/${user}/${repo}/pages`, {
+      method: 'POST',
+      body: JSON.stringify({ source: { branch: 'main', path: '/' } })
+    });
+    // 409 = already enabled, that's fine
+  }
+
+  async function putFile(user, repo, path, content, message) {
+    let sha = undefined;
+    const existing = await gh(`/repos/${user}/${repo}/contents/${path}`);
+    if (existing.ok) {
+      const data = await existing.json();
+      sha = data.sha;
+    }
+    const res = await gh(`/repos/${user}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message,
+        content: b64EncodeUnicode(content),
+        ...(sha ? { sha } : {})
+      })
+    });
+    if (!res.ok) throw new Error('Не удалось загрузить файл: ' + (await res.text()));
+    return res.json();
+  }
+
+  // ── History (localStorage) ──────────────────────────
+  function loadManifest() {
+    try { return JSON.parse(localStorage.getItem('dh_manifest') || '[]'); }
+    catch { return []; }
+  }
+  function saveManifest(list) {
+    localStorage.setItem('dh_manifest', JSON.stringify(list.slice(0, 30)));
+  }
+  function renderManifest() {
+    const list = loadManifest();
+    if (!list.length) {
+      manifestList.innerHTML = '<div class="empty-manifest">Пока пусто — первое отправление появится здесь.</div>';
+      return;
+    }
+    manifestList.innerHTML = list.map(item => `
+      <div class="parcel">
+        <div>
+          <div class="p-name">${item.name}</div>
+          <div class="p-time">${item.date}</div>
+        </div>
+        <a href="${item.url}" target="_blank" rel="noopener">Открыть →</a>
+      </div>
+    `).join('');
+  }
+  renderManifest();
+
+  // ── Deploy ───────────────────────────────────────────
+  deployBtn.addEventListener('click', async () => {
+    const user  = ghUser.value.trim();
+    const repo  = ghRepo.value.trim();
+    const token = ghToken.value.trim();
+    const name  = siteName.value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+    const content = fileContent || htmlCode.value;
+
+    if (!user || !repo || !token) { setStatus('Заполни логин, репозиторий и токен.', true); return; }
+    if (!name) { setStatus('Укажи имя файла.', true); return; }
+    if (!content || !content.trim()) { setStatus('Загрузи файл или вставь HTML-код.', true); return; }
+
+    localStorage.setItem('dh_user', user);
+    localStorage.setItem('dh_repo', repo);
+    localStorage.setItem('dh_token', token);
+
+    deployBtn.disabled = true;
+    labelResult.classList.remove('show');
+
+    try {
+      setStatus('Проверяю репозиторий и GitHub Pages…');
+      await ensureRepoAndPages(user, repo);
+
+      const path = `${name}.html`;
+      setStatus('Загружаю файл…');
+      await putFile(user, repo, path, content, `deploy: ${name}.html via Deploy Hub`);
+
+      const liveUrl = `https://${user}.github.io/${repo}/${name}.html`;
+      const repoUrl = `https://github.com/${user}/${repo}`;
+
+      resultTitle.textContent = `${name}.html`;
+      resultUrl.value = liveUrl;
+      openLink.href = liveUrl;
+      repoLink.href = repoUrl;
+      labelResult.classList.add('show');
+
+      const list = loadManifest();
+      list.unshift({ name: `${nam
